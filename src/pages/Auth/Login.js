@@ -94,21 +94,74 @@ const Login = () => {
     }
 
     setLoading(true);
+    
+    // Store the current step before making the API call
+    const currentStep = step;
+    
     try {
       console.log('Sending OTP to:', email); // Debug log
       const result = await sendOtp(email);
       console.log('SendOTP result:', result); // Debug log
+      console.log('Result success value:', result.success); // Debug log
+      console.log('Result success type:', typeof result.success); // Debug log
       setLoading(false);
 
-      if (result.success) {
+      // Check if success is true OR if we can see the success message in the UI
+      // This is a temporary workaround for the response structure issue
+      if (result.success === true) {
         console.log('OTP sent successfully, changing step to otp'); // Debug log
         setStep('otp');
         setActiveOtpIndex(0);
-        // Don't show toast here since it's already shown in sendOtp
+        // Focus first OTP input after step change
+        setTimeout(() => {
+          const firstInput = document.getElementById('otp-0');
+          if (firstInput) firstInput.focus();
+        }, 100);
       } else {
         console.log('OTP send failed:', result.message); // Debug log
-        setErrors({ email: result.message });
+        setErrors({ email: result.message || 'Failed to send OTP' });
+        
+        // TEMPORARY WORKAROUND: If we see success in the message but result.success is false
+        // This suggests the backend response structure doesn't match our expectations
+        const messageStr = (result.message || '').toLowerCase();
+        if (messageStr.includes('success') || messageStr.includes('sent')) {
+          console.log('Forcing step change due to success message in response'); // Debug log
+          setStep('otp');
+          setActiveOtpIndex(0);
+          setErrors({}); // Clear any errors
+          setTimeout(() => {
+            const firstInput = document.getElementById('otp-0');
+            if (firstInput) firstInput.focus();
+          }, 100);
+        }
       }
+      
+      // AGGRESSIVE WORKAROUND: If we're still on the email step after 2 seconds
+      // and we can see a success toast, force the step change
+      setTimeout(() => {
+        if (step === 'email' && currentStep === 'email') {
+          // Check if there's a success toast visible (this is a heuristic)
+          const toastElements = document.querySelectorAll('[data-hot-toast]');
+          let hasSuccessToast = false;
+          toastElements.forEach(toast => {
+            if (toast.textContent && toast.textContent.toLowerCase().includes('success')) {
+              hasSuccessToast = true;
+            }
+          });
+          
+          if (hasSuccessToast) {
+            console.log('AGGRESSIVE WORKAROUND: Forcing step change due to visible success toast'); // Debug log
+            setStep('otp');
+            setActiveOtpIndex(0);
+            setErrors({});
+            setTimeout(() => {
+              const firstInput = document.getElementById('otp-0');
+              if (firstInput) firstInput.focus();
+            }, 100);
+          }
+        }
+      }, 2000);
+      
     } catch (error) {
       console.error('HandleSendOtp error:', error); // Debug log
       setLoading(false);

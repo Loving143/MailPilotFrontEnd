@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import Card from '../../components/UI/Card';
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 const Profile = () => {
-  const { user, updateUserProfile, uploadResume, checkResumeStatus } = useAuth();
+  const { user, updateUserProfile, uploadResume, checkResumeStatus, checkResumeStatusSync } = useAuth();
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -29,7 +29,28 @@ const Profile = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeUploading, setResumeUploading] = useState(false);
   const [resumeStatusRefresh, setResumeStatusRefresh] = useState(0); // Force re-render
-  const hasResume = checkResumeStatus();
+  const [hasResume, setHasResume] = useState(checkResumeStatusSync());
+
+  // Check resume status on component mount and when user changes
+  React.useEffect(() => {
+    const checkStatus = async () => {
+      console.log('Profile: Checking resume status...'); // Debug log
+      try {
+        const status = await checkResumeStatus();
+        console.log('Profile: Resume status from backend:', status); // Debug log
+        setHasResume(status);
+      } catch (error) {
+        console.error('Profile: Error checking resume status:', error);
+        const fallbackStatus = checkResumeStatusSync();
+        console.log('Profile: Fallback resume status:', fallbackStatus); // Debug log
+        setHasResume(fallbackStatus);
+      }
+    };
+    
+    if (user) {
+      checkStatus();
+    }
+  }, [user, resumeStatusRefresh, checkResumeStatus, checkResumeStatusSync]);
 
   const handleChange = (e) => {
     setFormData({
@@ -77,6 +98,9 @@ const Profile = () => {
         
         // Force re-render to update hasResume status
         setResumeStatusRefresh(prev => prev + 1);
+        
+        // Immediately update local state
+        setHasResume(true);
       } else {
         toast.error(result.message || 'Failed to upload resume');
       }

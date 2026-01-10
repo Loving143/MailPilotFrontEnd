@@ -22,10 +22,29 @@ import {
 } from 'lucide-react';
 
 const QuickSend = () => {
-  const { checkResumeStatus } = useAuth();
+  const { checkResumeStatus, checkResumeStatusSync } = useAuth();
   const [recipientEmail, setRecipientEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const hasResume = checkResumeStatus();
+  const [hasResume, setHasResume] = useState(checkResumeStatusSync());
+
+  // Check resume status on component mount
+  React.useEffect(() => {
+    const checkStatus = async () => {
+      console.log('QuickSend: Checking resume status...'); // Debug log
+      try {
+        const status = await checkResumeStatus();
+        console.log('QuickSend: Resume status from backend:', status); // Debug log
+        setHasResume(status);
+      } catch (error) {
+        console.error('QuickSend: Error checking resume status:', error);
+        const fallbackStatus = checkResumeStatusSync();
+        console.log('QuickSend: Fallback resume status:', fallbackStatus); // Debug log
+        setHasResume(fallbackStatus);
+      }
+    };
+    
+    checkStatus();
+  }, [checkResumeStatus, checkResumeStatusSync]);
 
   const handleQuickSend = async (e) => {
     e.preventDefault();

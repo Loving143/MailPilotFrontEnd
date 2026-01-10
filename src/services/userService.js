@@ -24,5 +24,16 @@ export const userService = {
       },
     });
     return response.data;
+  },
+
+  // Check resume status
+  checkResumeStatus: async () => {
+    try {
+      const response = await api.get('/resume/status');
+      return response.data;
+    } catch (error) {
+      console.error('Resume status check error:', error);
+      return { hasResume: false };
+    }
   }
 };

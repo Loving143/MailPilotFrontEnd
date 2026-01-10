@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 const SendEmail = () => {
-  const { checkResumeStatus } = useAuth();
+  const { checkResumeStatus, checkResumeStatusSync } = useAuth();
   const [formData, setFormData] = useState({
     to: '',
     subject: '',
@@ -31,7 +31,26 @@ const SendEmail = () => {
   });
   const [loading, setLoading] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
-  const hasResume = checkResumeStatus();
+  const [hasResume, setHasResume] = useState(checkResumeStatusSync());
+
+  // Check resume status on component mount
+  React.useEffect(() => {
+    const checkStatus = async () => {
+      console.log('SendEmail: Checking resume status...'); // Debug log
+      try {
+        const status = await checkResumeStatus();
+        console.log('SendEmail: Resume status from backend:', status); // Debug log
+        setHasResume(status);
+      } catch (error) {
+        console.error('SendEmail: Error checking resume status:', error);
+        const fallbackStatus = checkResumeStatusSync();
+        console.log('SendEmail: Fallback resume status:', fallbackStatus); // Debug log
+        setHasResume(fallbackStatus);
+      }
+    };
+    
+    checkStatus();
+  }, [checkResumeStatus, checkResumeStatusSync]);
 
   const testConnection = async () => {
     setTestingConnection(true);
