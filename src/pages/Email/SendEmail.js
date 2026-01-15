@@ -128,6 +128,25 @@ const SendEmail = () => {
       return;
     }
     
+    // Validate required fields
+    if (!formData.to || !formData.subject || !formData.message) {
+      toast.error('Please fill in all required fields (To, Subject, Message)');
+      return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.to)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    
+    // Ensure message is not just whitespace
+    if (!formData.message.trim()) {
+      toast.error('Message cannot be empty');
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -137,9 +156,10 @@ const SendEmail = () => {
       const emailData = {
         recipientEmail: formData.to,
         subject: formData.subject,
-        message: formData.message,
-        name: formData.name,
-        company: formData.company
+        message: formData.message.trim(), // Ensure no leading/trailing whitespace
+        body: formData.message.trim(),    // Backup field name
+        name: formData.name || '',        // Ensure not undefined
+        company: formData.company || ''   // Ensure not undefined
       };
       
       console.log('Sending email with data:', emailData); // Debug log
@@ -159,9 +179,10 @@ const SendEmail = () => {
             hrDetails: [{
               email: formData.to,
               subject: formData.subject,
-              message: formData.message,
-              name: formData.name,
-              company: formData.company,
+              message: formData.message.trim(), // Primary field name
+              body: formData.message.trim(),    // Backup field name in case backend expects 'body'
+              name: formData.name || '',        // Ensure not undefined
+              company: formData.company || '',  // Ensure not undefined
               mobNo: '', // Add mobile number field if needed
               status: 'EMAIL_SENT' // Default status
             }]

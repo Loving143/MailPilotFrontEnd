@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { emailService } from '../../services/emailService';
 import Card from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
@@ -19,10 +20,12 @@ import {
   Download,
   Edit3,
   Save,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 
 const EmailLogs = () => {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,14 +96,16 @@ const EmailLogs = () => {
         
         // Map the backend response to frontend format
         const mappedLogs = Array.isArray(emailData) ? emailData.map((log, index) => ({
-          id: log.id || index + 1, // Use log.id if available, otherwise use index
+          id: log.id || `email-${index}`, // Use log.id if available, otherwise create a unique identifier
           to: log.recipientEmail || log.email || 'Unknown', // Use recipientEmail from EmailLogResponse
           subject: log.subject || 'No Subject',
           status: log.status ? log.status.toLowerCase().replace('_', ' ') : 'unknown',
           timestamp: log.sentAt || new Date().toISOString(), // Use sentAt from EmailLogResponse
           name: log.name || '',
           company: log.company || '',
-          mobNo: log.mobNo || ''
+          mobNo: log.mobNo || '',
+          // Store the original data for the viewer
+          originalData: log
         })) : [];
         
         console.log('Mapped logs:', mappedLogs); // Debug log
@@ -108,14 +113,16 @@ const EmailLogs = () => {
       } else if (response && Array.isArray(response)) {
         // Handle case where response is directly an array
         const mappedLogs = response.map((log, index) => ({
-          id: log.id || index + 1,
+          id: log.id || `email-${index}`,
           to: log.recipientEmail || log.email || 'Unknown',
           subject: log.subject || 'No Subject',
           status: log.status ? log.status.toLowerCase().replace('_', ' ') : 'unknown',
           timestamp: log.sentAt || new Date().toISOString(),
           name: log.name || '',
           company: log.company || '',
-          mobNo: log.mobNo || ''
+          mobNo: log.mobNo || '',
+          // Store the original data for the viewer
+          originalData: log
         }));
         setLogs(mappedLogs);
       } else {
@@ -600,6 +607,16 @@ const EmailLogs = () => {
                           </td>
                           <td className="px-6 py-6">
                             <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/email-viewer/${log.id}`)}
+                                className="flex items-center space-x-1 text-green-600 border-green-200 hover:bg-green-50"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>View</span>
+                              </Button>
+                              
                               <Button
                                 variant="outline"
                                 size="sm"

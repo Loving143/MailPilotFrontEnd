@@ -66,10 +66,11 @@ const QuickSend = () => {
       
       // Try different structures for QuickSendRequest
       const quickSendData = {
-        recipientEmail: recipientEmail,
+        recipientEmail: recipientEmail.trim(),
         // Add other possible fields that QuickSendRequest might expect
         subject: 'Quick Send Message', // Default subject
         message: 'This is a quick send message', // Default message
+        body: 'This is a quick send message',    // Backup field name
         name: '', // Optional name
         company: '' // Optional company
       };
@@ -89,10 +90,48 @@ const QuickSend = () => {
       
     } catch (error) {
       console.error('Quick send error:', error);
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.data || 
-                          error.message || 
-                          'Failed to send quick message';
+      console.error('Error response:', error.response); // Debug log
+      console.error('Error response data:', error.response?.data); // Debug log
+      console.error('Error response status:', error.response?.status); // Debug log
+      
+      // Extract the actual error message from different possible response structures
+      let errorMessage = 'Failed to send quick message';
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Check for different error message formats
+        if (typeof errorData === 'string') {
+          // Sometimes the error message is directly in the response data as a string
+          errorMessage = errorData;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.data) {
+          errorMessage = errorData.data;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (errorData.details) {
+          errorMessage = errorData.details;
+        }
+        
+        // Handle Spring Boot error format
+        if (errorData.timestamp && errorData.status && errorData.error) {
+          errorMessage = errorData.message || errorData.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Clean up the error message (remove technical details if present)
+      if (errorMessage.includes('RuntimeException')) {
+        // Extract just the message part after the exception type
+        const match = errorMessage.match(/RuntimeException.*?:\s*(.+)/);
+        if (match) {
+          errorMessage = match[1];
+        }
+      }
+      
+      console.log('Final error message to show:', errorMessage); // Debug log
       toast.error(errorMessage);
     } finally {
       setLoading(false);

@@ -10,6 +10,7 @@ import EmailManagement from './pages/Email/EmailManagement';
 import SendEmail from './pages/Email/SendEmail';
 import QuickSend from './pages/Email/QuickSend';
 import EmailLogs from './pages/Email/EmailLogs';
+import EmailViewer from './pages/Email/EmailViewer';
 import Profile from './pages/Profile/Profile';
 import IntentManagement from './pages/Intent/IntentManagement';
 import LoadingSpinner from './components/UI/LoadingSpinner';
@@ -62,6 +63,7 @@ function AppRoutes() {
           <Route path="quick-send" element={<QuickSend />} />
           <Route path="logs" element={<EmailLogs />} />
         </Route>
+        <Route path="email-viewer/:id" element={<EmailViewer />} />
         <Route path="intents" element={<IntentManagement />} />
         <Route path="profile" element={<Profile />} />
       </Route>

@@ -38,13 +38,12 @@ api.interceptors.response.use(
       toast.error('Session expired. Please login again.');
     } else if (error.response?.status === 403) {
       toast.error('Access denied. You do not have permission to perform this action.');
-    } else if (error.response?.status >= 500) {
-      toast.error('Server error. Please try again later.');
     } else if (error.code === 'ECONNABORTED') {
       toast.error('Request timeout. Please check your connection.');
     } else if (!error.response) {
       toast.error('Network error. Please check your connection.');
     }
+    // Removed the generic server error toast to let components handle specific error messages
     
     return Promise.reject(error);
   }
