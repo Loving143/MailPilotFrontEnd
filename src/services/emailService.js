@@ -108,10 +108,34 @@ export const emailService = {
     return response.data;
   },
 
-  // Fetch specific email by ID
+  // Fetch specific email by ID with full details (body, resume, etc.)
   fetchEmailById: async (id) => {
     const response = await api.get(`/email/fetch/${id}`);
     return response.data;
+  },
+
+  // Download resume attachment - adjust endpoint based on your backend
+  downloadResume: async (emailId, resumeFilename) => {
+    try {
+      // Try the resume-specific endpoint first
+      const response = await api.get(`/email/${emailId}/resume`, {
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, */*'
+        }
+      });
+      return response;
+    } catch (error) {
+      // If that fails, try alternative endpoint
+      console.log('Trying alternative resume endpoint...');
+      const response = await api.get(`/email/fetch/${emailId}/resume`, {
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, */*'
+        }
+      });
+      return response;
+    }
   },
 
   // Delete email log
